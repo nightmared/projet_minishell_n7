@@ -1,6 +1,8 @@
 #ifndef COMMANDS_H_HEADER
 #define COMMANDS_H_HEADER
 
+#include "common.h"
+
 void command_exit_shell(char** argv);
 void command_echo(char** argv);
 void command_cd(char** argv);
@@ -12,13 +14,14 @@ struct builtin_command {
     void (*associated_command)(char** argv);
 };
 
-static struct builtin_command builtin_commands[] = {
-    {"exit", command_exit_shell},
-    {"cd", command_cd},
+extern struct builtin_command builtin_commands[2];
 
+struct command_line {
+    char** words;
+    bool background_task;
 };
 
 // Lire une commande
-char** read_input();
+struct command_line read_input();
 
 #endif // COMMANDS_H_HEADER

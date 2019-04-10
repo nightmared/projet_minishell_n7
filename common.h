@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_COMMAND_LENGTH 30
 
-// exit code
 extern int exit_code;
 
 #endif // COMMON_H_HEADER
