@@ -13,11 +13,17 @@ void add_list(struct list **l, void* data) {
 }
 
 void delete_list(struct list **l, void* data) {
+    delete_list_with_fun(l, data, NULL);
+}
+
+void delete_list_with_fun(struct list **l, void* data, void (*fun)(void*)) {
     struct list **cur = l;
     while (*cur != NULL) {
         if ((*cur)->data == data) {
             struct list *old = *cur;
-            cur = &old->next;
+            if (fun != NULL)
+                fun(&old->data);
+            *cur = old->next;
             free(old);
             return;
         }
@@ -26,11 +32,17 @@ void delete_list(struct list **l, void* data) {
 }
 
 void free_list(struct list **l) {
-    struct list *cur = *l;
+    free_list_with_fun(l, NULL);
+}
 
-    while (cur != NULL) {
-        struct list *old = cur;
-        cur = cur->next;
+void free_list_with_fun(struct list **l, void (*fun)(void*)) {
+    struct list **cur = l;
+
+    while (*cur != NULL) {
+        struct list *old = *cur;
+        if (fun != NULL)
+            fun(&old->data);
+        *cur = old->next;
         free(old);
     }
     l = NULL;

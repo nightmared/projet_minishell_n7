@@ -1,38 +1,52 @@
 #include "commands.h"
 #include "process.h"
+#include "list.h"
 #include <sys/wait.h>
+#include <signal.h>
 
 int exit_code = -1;
 struct list *background_processes = NULL;
 
+void sig_handler_sigint(int signum, siginfo_t *sig_infos, void* _unused) {
+    exit_code = 0;
+}
+
 int main(int argc, char *argv[]) {
+    struct sigaction signal_catcher;
+    signal_catcher.sa_sigaction = &sig_handler_sigint;
+    sigemptyset(&signal_catcher.sa_mask);
+    signal_catcher.sa_flags = SA_SIGINFO;
+    signal_catcher.sa_restorer = NULL;
+
+    sigaction(SIGINT, &signal_catcher, NULL);
+
     while (exit_code < 0) {
+        // on vérifie qu'aucune tâche de fond n'a terminée
+        scan_background_processes(&background_processes);
+
         write(STDOUT_FILENO, "PS1: ", 5);
 
        struct command_line input = read_input();
-       struct process processus;
-       processus.cmd = input;
+       if (!input.is_valid) {
+           putchar('\n');
+           continue;
+       }
+
        if (input.words[0] == NULL) {
            dprintf(STDERR_FILENO, "Pas de commande à exécuter !?\n");
            continue;
        }
 
-       bool is_builtin = false;
+
+       struct process *processus = malloc(sizeof(struct process));
+       if (processus == NULL) {
+            dprintf(STDERR_FILENO, "Impossible d'allouer de la mémoire ?\n");
+            exit(1);
+       }
+       processus->cmd = input;
 
         // On vérifie que la commande spécifiée ne correspond à aucune commande "native" (fournie par le shell)
-        for (int i = 0; i < sizeof(builtin_commands)/sizeof(struct builtin_command); i++) {
-            int max_len = strlen(builtin_commands[i].command);
-            if (strlen(input.words[0]) < max_len)
-                max_len = strlen(input.words[0]);
-            if (!strncmp(input.words[0], builtin_commands[i].command, max_len)) {
-                // Il s'agit d'une commande native, exécutons la
-                (builtin_commands[i].associated_command)(&input.words[1]);
-
-                is_builtin = true;
-                break;
-            }
-        }
-        // Est-ce une commande native ? Si c'est le cas, elle a déjà été exécutée dans la boucle avant d'arriver ici
+        bool is_builtin = exec_builtin(&input);
         if (!is_builtin) {
             // On exécute la commande en cherchant dans le path
             pid_t pid = fork();
@@ -42,26 +56,28 @@ int main(int argc, char *argv[]) {
             } else if (pid == 0) {
                 execvp(input.words[0], input.words);
             } else {
-                processus.pid = pid;
+                processus->pid = pid;
 
                 // tâche de fond ? on continue sans attendre...
-                if (!processus.cmd.background_task)
-                    continue;
+                if (processus->cmd.background_task) {
+                    add_list(&background_processes, processus);
+                } else {
+                    // on attend que le processus change d'état
+                    int wait_status;
+                    if (waitpid(pid, &wait_status, 0) < 0) {
+                        dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant\n");
+                        exit(1);
+                    }
 
-                // on attend que le processus change d'état
-                int wait_status;
-                if (waitpid(pid, &wait_status, 0) < 0) {
-                    dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant\n");
-                    exit(1);
+                    // on libère la mémoire allouée
+                    free_process(&processus);
                 }
             }
         }
 
-        // on libère la mémoire allouée lorsque le processus se ferme
-        if (!processus.cmd.background_task) {
-            free_process(&processus);
-        }
     }
+
+    free_list_with_fun(&background_processes, (void(*)(void*))&free_process);
 
     return exit_code;
 }

@@ -49,44 +49,53 @@ void command_cd(char** argv) {
 struct command_line read_input() {
     char buf[MAX_COMMAND_LENGTH];
     int nb_read = read(STDIN_FILENO, &buf, MAX_COMMAND_LENGTH);
+
+    if (nb_read < 2) {
+        struct command_line invalid;
+        invalid.is_valid = false;
+        return invalid;
+    }
+
     // On supprime le EOL (\n)
-    if (nb_read > 0)
-        buf[--nb_read] = '\0';
-    // Mesure de sécurité
-    buf[MAX_COMMAND_LENGTH-1] = '\0';
+    buf[--nb_read] = '\0';
 
     // compte le nombre de mots
-    int counter = 1;
+    int counter = 0;
     int buf_pos = 0;
-    while (buf_pos < nb_read) {
-        if (buf[buf_pos++] == ' ') {
-            counter += 1;
+    int old_pos = 0;
+    while (buf_pos <= nb_read) {
+        if (buf[buf_pos] == ' ' || buf[buf_pos] == '\0') {
+            if (buf_pos > old_pos)
+                counter += 1;
+            old_pos = buf_pos+1;
         }
+        buf_pos++;
     }
 
     // tableau de mots
-    char** words = malloc((counter+1)*sizeof(char*));
+    char** words = calloc(counter+1, sizeof(char*));
 
-    struct command_line res = { words };
+    struct command_line res;
+    res.words = words;
+    res.is_valid = true;
 
     // découpe la chaîne en mots
     buf_pos = 0;
-    int previous_pos = buf_pos;
+    old_pos = 0;
     int word_number = 0;
-    while (buf_pos < nb_read) {
-        while (buf[buf_pos] != ' ' && buf[buf_pos] != '\0')
-            buf_pos++;
-
-        if (buf_pos != previous_pos) {
-            words[word_number] = malloc((buf_pos-previous_pos+1)*sizeof(char));
-            memcpy(words[word_number], buf+previous_pos, buf_pos-previous_pos+1);
-            words[word_number][buf_pos-previous_pos] = '\0';
-            previous_pos = buf_pos+1;
+    while (buf_pos <= nb_read) {
+        if (buf[buf_pos] == ' ' || buf[buf_pos] == '\0') {
+            if (buf_pos > old_pos) {
+                words[word_number] = calloc((buf_pos-old_pos+1), sizeof(char));
+                memcpy(words[word_number], buf+old_pos, buf_pos-old_pos);
+                words[word_number][buf_pos-old_pos] = '\0';
+                word_number++;
+            }
+            old_pos = buf_pos+1;
         }
-
-        word_number++;
         buf_pos++;
     }
+
     // délimiteur pour indiquer la fin des données
     words[counter] = NULL;
 
@@ -99,4 +108,20 @@ struct command_line read_input() {
 
 
     return res;
+}
+
+bool exec_builtin(struct command_line *cmd) {
+     for (int i = 0; i < sizeof(builtin_commands)/sizeof(struct builtin_command); i++) {
+        char *cmd_name = cmd->words[0];
+        int max_len = strlen(builtin_commands[i].command);
+        if (strlen(cmd_name) < max_len)
+            max_len = strlen(cmd_name);
+        if (!strncmp(cmd_name, builtin_commands[i].command, max_len)) {
+            // Il s'agit d'une commande native, exécutons la
+            (builtin_commands[i].associated_command)(&cmd->words[1]);
+
+            return true;
+        }
+    }
+    return false;
 }

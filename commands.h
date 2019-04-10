@@ -17,11 +17,19 @@ struct builtin_command {
 extern struct builtin_command builtin_commands[2];
 
 struct command_line {
+    // Tableau des mots qui composent la commande
     char** words;
+    // Tâche d'arrière plan ?
     bool background_task;
+    // La commande est-elle valide ?
+    bool is_valid;
 };
 
 // Lire une commande
 struct command_line read_input();
+
+// Exécuter une commande native si nécessaire (retourne vrai si une commande native a été lancée)
+bool exec_builtin(struct command_line *cmd);
+
 
 #endif // COMMANDS_H_HEADER
