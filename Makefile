@@ -1,8 +1,7 @@
-EXEC = miniminishell
-FILES = miniminishell.c commands.c
+EXEC = minishell
+FILES = minishell.c commands.c
 OBJECTS = $(FILES:.c=.o)
-HEADERS = $(FILES:.c=.h)
-CFLAGS = -Wall -pedantic
+CFLAGS = -g -Wall -pedantic
 
 all: $(EXEC)
 

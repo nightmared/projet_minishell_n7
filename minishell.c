@@ -31,26 +31,31 @@ int main(int argc, char *argv[]) {
             }
         }
         // Est-ce une commande native ? Si c'est le cas, elle a déjà été exécutée dans la boucle avant d'arriver ici
-        if (is_builtin)
-            continue;
-
-        // On exécute la commande en cherchant dans le path
-        pid_t pid = fork();
-        if (pid < -1) {
-            dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");
-            exit(1);
-        } else if (pid == 0) {
-            execvp(words[0], words);
-        } else {
-            // on attends que le processus change d'état
-            int wait_status;
-            if (waitpid(pid, &wait_status, 0) < 0) {
-                dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant\n");
+        if (!is_builtin) {
+            // On exécute la commande en cherchant dans le path
+            pid_t pid = fork();
+            if (pid < -1) {
+                dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");
                 exit(1);
+            } else if (pid == 0) {
+                execvp(words[0], words);
+            } else {
+                // on attends que le processus change d'état
+                int wait_status;
+                if (waitpid(pid, &wait_status, 0) < 0) {
+                    dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant\n");
+                    exit(1);
+                }
             }
-
-
         }
+
+        // on libère la mémoire allouée
+        char** freer = words;
+        while(*freer != NULL) {
+            free(*freer);
+            freer++;
+        }
+        free(words);
     }
 
     return exit_code;
