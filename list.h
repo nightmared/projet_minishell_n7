@@ -6,6 +6,8 @@ struct list {
     struct list *next;
 };
 
+int len_list(struct list **l);
+void* get_list(struct list **l, int pos);
 void add_list(struct list **l, void* data);
 void delete_list(struct list **l, void* data);
 // supprime une donnée en appelant la fonction fun sur la donnée supprimée

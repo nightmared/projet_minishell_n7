@@ -5,11 +5,18 @@
 #include "commands.h"
 #include "list.h"
 
+enum process_state {
+    RUNNING,
+    SUSPENDED
+};
+
 struct process {
     pid_t pid;
     struct command_line cmd;
+    enum process_state state;
 };
 
+char *get_process_state(struct process *p);
 void free_process(struct process **p);
 void scan_background_processes(struct list **bkg_proc);
 

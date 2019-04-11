@@ -10,5 +10,6 @@
 #define MAX_COMMAND_LENGTH 30
 
 extern int exit_code;
+extern struct list *background_processes;
 
 #endif // COMMON_H_HEADER

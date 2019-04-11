@@ -3,10 +3,6 @@
 
 #include "common.h"
 
-void command_exit_shell(char** argv);
-void command_echo(char** argv);
-void command_cd(char** argv);
-
 // toutes les commandes intégrées de base dans notre shell
 struct builtin_command {
     char* command;
@@ -14,7 +10,7 @@ struct builtin_command {
     void (*associated_command)(char** argv);
 };
 
-extern struct builtin_command builtin_commands[2];
+extern struct builtin_command builtin_commands[6];
 
 struct command_line {
     // Tableau des mots qui composent la commande
@@ -24,6 +20,9 @@ struct command_line {
     // La commande est-elle valide ?
     bool is_valid;
 };
+
+// print the command line
+void print_command_line(struct command_line *cmd);
 
 // Lire une commande
 struct command_line read_input();

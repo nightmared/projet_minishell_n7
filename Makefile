@@ -1,5 +1,5 @@
 EXEC = minishell
-FILES = minishell.c commands.c list.c process.c
+FILES = minishell.c commands.c list.c process.c builtins.c
 OBJECTS = $(FILES:.c=.o)
 CFLAGS = -g -Wall -pedantic
 

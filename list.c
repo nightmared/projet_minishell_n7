@@ -1,6 +1,28 @@
 #include <stdlib.h>
 #include "list.h"
 
+int len_list(struct list **l) {
+    int counter = 0;
+    struct list **cur = l;
+    while (*cur != NULL) {
+        counter++;
+        cur = &(*cur)->next;
+    }
+    return counter;
+}
+
+void* get_list(struct list **l, int pos) {
+    int counter = 0;
+    struct list **cur = l;
+    while (*cur != NULL) {
+        if (counter == pos)
+            return (*cur)->data;
+        counter++;
+        cur = &(*cur)->next;
+    }
+    return NULL;
+}
+
 void add_list(struct list **l, void* data) {
     struct list **cur = l;
     while (*cur != NULL) {

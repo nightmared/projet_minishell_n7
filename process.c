@@ -1,6 +1,14 @@
 #include "process.h"
 #include <sys/wait.h>
 
+char *get_process_state(struct process *p) {
+    if (p->state == RUNNING) {
+        return "en cours d'exécution";
+    } else {
+        return "suspendu";
+    }
+}
+
 void free_process(struct process **p) {
     if (p == NULL || *p == NULL)
         return;
