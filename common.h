@@ -11,5 +11,7 @@
 
 extern int exit_code;
 extern struct list *background_processes;
+// processus actuellement en cours d'exécution;
+extern struct process *processus;
 
 #endif // COMMON_H_HEADER

@@ -12,7 +12,7 @@ void print_command_line(struct command_line *cmd) {
 struct command_line read_input() {
     char buf[MAX_COMMAND_LENGTH];
     if (fgets(buf, MAX_COMMAND_LENGTH, stdin) == NULL) {
-        printf("Fin de fichier atteinte, au revoir !\n");
+        printf("\nFin de fichier atteinte, au revoir !\n");
         // On ferme sans attendre les processus orphelins :(
         exit(0);
     }

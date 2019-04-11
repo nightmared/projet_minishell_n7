@@ -6,9 +6,12 @@
 
 int exit_code = -1;
 struct list *background_processes = NULL;
+struct process *processus = NULL;
 
 void sig_handler_sigint(int signum, siginfo_t *sig_infos, void* _unused) {
-    exit_code = 0;
+    // propagation du signal
+    if (processus != NULL && processus->is_ok)
+        kill(processus->pid, SIGINT);
 }
 
 int main(int argc, char *argv[]) {
@@ -31,25 +34,25 @@ int main(int argc, char *argv[]) {
         printf("PS1: ");
 
         struct command_line input = read_input();
+
+        // on vérifie qu'aucune tâche de fond n'a terminée
+        scan_background_processes(&background_processes);
+
         if (!input.is_valid) {
            putchar('\n');
            continue;
         }
-
         if (input.words[0] == NULL) {
            dprintf(STDERR_FILENO, "Pas de commande à exécuter !?\n");
            continue;
         }
 
-        struct process *processus = malloc(sizeof(struct process));
+        processus = calloc(1, sizeof(struct process));
         if (processus == NULL) {
             dprintf(STDERR_FILENO, "Impossible d'allouer de la mémoire ?\n");
             exit(1);
         }
         processus->cmd = input;
-
-        // on vérifie qu'aucune tâche de fond n'a terminée
-        scan_background_processes(&background_processes);
 
         // On vérifie que la commande spécifiée ne correspond à aucune commande "native" (fournie par le shell)
         bool is_builtin = exec_builtin(&input);
@@ -69,6 +72,7 @@ int main(int argc, char *argv[]) {
         } else {
             processus->pid = pid;
             processus->state = RUNNING;
+            processus->is_ok = true;
 
             // tâche de fond ? on continue sans attendre...
             if (processus->cmd.background_task) {
@@ -81,6 +85,7 @@ int main(int argc, char *argv[]) {
                 free_process(&processus);
             }
         }
+        processus = NULL;
 
     }
 

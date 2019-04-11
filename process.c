@@ -1,12 +1,17 @@
 #include "process.h"
 #include <sys/wait.h>
+#include <errno.h>
 
 void wait_process_blocking(pid_t pid) {
     bool stopped = false;
     int wait_status;
     while (!stopped) {
         if (waitpid(pid, &wait_status, 0) < 0) {
-            dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant\n");
+            // waitpid() interrompu par un signal
+            if (errno == EINTR) {
+                continue;
+            }
+            dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant: %s\n", strerror(errno));
             exit(1);
         }
         if (WIFEXITED(wait_status) || WIFSIGNALED(wait_status)) {

@@ -14,6 +14,8 @@ struct process {
     pid_t pid;
     struct command_line cmd;
     enum process_state state;
+    // cette valeur ne devient vrai quel lorsque la struct est proprement complétée
+    bool is_ok;
 };
 
 void wait_process_blocking(pid_t pid);

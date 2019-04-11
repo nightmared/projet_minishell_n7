@@ -87,11 +87,12 @@ void command_fg(char** argv) {
     while (*cur != NULL) {
         if (counter == 0) {
             struct process *p = (*cur)->data;
-            // p->state = RUNNING;
+            free_process(&processus);
             // on recommence l'exécution du programme
+            processus = p;
+            delete_list(cur, p);
             kill(p->pid, SIGCONT);
             wait_process_blocking(p->pid);
-            delete_list_with_fun(cur, p, (void (*)(void**))&free_process);
             return;
         }
         counter--;
