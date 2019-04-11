@@ -1,6 +1,20 @@
 #include "process.h"
 #include <sys/wait.h>
 
+void wait_process_blocking(pid_t pid) {
+    bool stopped = false;
+    int wait_status;
+    while (!stopped) {
+        if (waitpid(pid, &wait_status, 0) < 0) {
+            dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant\n");
+            exit(1);
+        }
+        if (WIFEXITED(wait_status) || WIFSIGNALED(wait_status)) {
+            stopped = true;
+        }
+    }
+}
+
 char *get_process_state(struct process *p) {
     if (p->state == RUNNING) {
         return "en cours d'exécution";

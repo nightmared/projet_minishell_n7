@@ -16,6 +16,7 @@ struct process {
     enum process_state state;
 };
 
+void wait_process_blocking(pid_t pid);
 char *get_process_state(struct process *p);
 void free_process(struct process **p);
 void scan_background_processes(struct list **bkg_proc);

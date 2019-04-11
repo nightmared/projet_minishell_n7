@@ -41,15 +41,6 @@ int main(int argc, char *argv[]) {
            continue;
         }
 
-        // on vérifie qu'aucune tâche de fond n'a terminée
-        scan_background_processes(&background_processes);
-
-        // On vérifie que la commande spécifiée ne correspond à aucune commande "native" (fournie par le shell)
-        bool is_builtin = exec_builtin(&input);
-        if (is_builtin) {
-            continue;
-        }
-
         struct process *processus = malloc(sizeof(struct process));
         if (processus == NULL) {
             dprintf(STDERR_FILENO, "Impossible d'allouer de la mémoire ?\n");
@@ -57,7 +48,17 @@ int main(int argc, char *argv[]) {
         }
         processus->cmd = input;
 
-        // nouveau processus fils
+        // on vérifie qu'aucune tâche de fond n'a terminée
+        scan_background_processes(&background_processes);
+
+        // On vérifie que la commande spécifiée ne correspond à aucune commande "native" (fournie par le shell)
+        bool is_builtin = exec_builtin(&input);
+        if (is_builtin) {
+            free_process(&processus);
+            continue;
+        }
+
+                // nouveau processus fils
         pid_t pid = fork();
         if (pid < -1) {
             dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");
@@ -73,12 +74,8 @@ int main(int argc, char *argv[]) {
             if (processus->cmd.background_task) {
                 add_list(&background_processes, processus);
             } else {
-                // on attend que le processus change d'état
-                int wait_status;
-                if (waitpid(pid, &wait_status, 0) < 0) {
-                    dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant\n");
-                    exit(1);
-                }
+                // on attend que le processus se termine
+                wait_process_blocking(pid);
 
                 // on libère la mémoire allouée
                 free_process(&processus);

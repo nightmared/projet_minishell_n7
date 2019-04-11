@@ -1,12 +1,13 @@
 #!/bin/sh
 
 ./minishell << EOF
+sleep 3 &
+sleep 6 &
+sleep 4 &
 sleep 5 &
-sleep 10 &
-sleep 7 &
-sleep 8 &
 jobs
 stop 2
-sleep 5
+stop 4
+sleep 6
 jobs
 EOF
