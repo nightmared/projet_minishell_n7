@@ -27,7 +27,7 @@ void scan_background_processes(struct list **bkg_proc) {
             dprintf(STDERR_FILENO, "waitpid() failed, let's ignore that...\n");
         } else if (state > 0) {
             if (WIFEXITED(status) || WIFSIGNALED(status)) {
-                delete_list_with_fun(l, p, (void (*)(void*))&free_process);
+                delete_list_with_fun(l, p, (void (*)(void**))&free_process);
             }
         }
 

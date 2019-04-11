@@ -3,9 +3,8 @@
 
 void add_list(struct list **l, void* data) {
     struct list **cur = l;
-    if (*cur != NULL) {
-        while ((*cur)->next != NULL)
-            cur = &(*cur)->next;
+    while (*cur != NULL) {
+        cur = &(*cur)->next;
     }
     *cur = malloc(sizeof(struct list));
     (*cur)->data = data;
@@ -16,7 +15,7 @@ void delete_list(struct list **l, void* data) {
     delete_list_with_fun(l, data, NULL);
 }
 
-void delete_list_with_fun(struct list **l, void* data, void (*fun)(void*)) {
+void delete_list_with_fun(struct list **l, void* data, void (*fun)(void**)) {
     struct list **cur = l;
     while (*cur != NULL) {
         if ((*cur)->data == data) {
@@ -35,7 +34,7 @@ void free_list(struct list **l) {
     free_list_with_fun(l, NULL);
 }
 
-void free_list_with_fun(struct list **l, void (*fun)(void*)) {
+void free_list_with_fun(struct list **l, void (*fun)(void**)) {
     struct list **cur = l;
 
     while (*cur != NULL) {
