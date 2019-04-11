@@ -1,29 +1,14 @@
 #include "commands.h"
 #include "process.h"
 #include "list.h"
-#include <sys/wait.h>
-#include <signal.h>
+#include "signals.h"
 
 int exit_code = -1;
 struct list *background_processes = NULL;
 struct process *processus = NULL;
 
-void sig_handler_sigint(int signum, siginfo_t *sig_infos, void* _unused) {
-    // propagation du signal
-    if (processus != NULL && processus->is_ok)
-        kill(processus->pid, SIGINT);
-}
-
 int main(int argc, char *argv[]) {
-    // On attrape les SIGINT (^C)
-    struct sigaction signal_catcher;
-    signal_catcher.sa_sigaction = &sig_handler_sigint;
-    sigemptyset(&signal_catcher.sa_mask);
-    signal_catcher.sa_flags = SA_SIGINFO;
-    signal_catcher.sa_restorer = NULL;
-
-    sigaction(SIGINT, &signal_catcher, NULL);
-
+    register_signals();
 
     // on force stdin a être bufferisé (important pour les tests)
     setvbuf(stdin, NULL, _IOLBF, 0);

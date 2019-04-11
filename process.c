@@ -9,6 +9,9 @@ void wait_process_blocking(pid_t pid) {
         if (waitpid(pid, &wait_status, 0) < 0) {
             // waitpid() interrompu par un signal
             if (errno == EINTR) {
+                // le processus a été terminé ou mis en tâche de fond par une interaction extérieure
+                if (processus == NULL)
+                    return;
                 continue;
             }
             dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant: %s\n", strerror(errno));
