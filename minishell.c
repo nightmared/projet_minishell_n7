@@ -10,10 +10,8 @@ struct process *processus = NULL;
 int main(int argc, char *argv[]) {
     register_signals();
 
-    // on force stdin a être bufferisé (important pour les tests)
-    setvbuf(stdin, NULL, _IOLBF, 0);
+    // un petit plus ;)
     setvbuf(stdout, NULL, _IONBF, 0);
-
 
     while (exit_code < 0) {
         printf("PS1: ");
@@ -46,7 +44,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-                // nouveau processus fils
+        // nouveau processus fils
         pid_t pid = fork();
         if (pid < -1) {
             dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");

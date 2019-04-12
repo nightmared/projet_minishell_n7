@@ -1,0 +1,27 @@
+|================================|
+| Rapport sur les questions 1->7 |
+|================================|
+
+Choix de conception
+-------------------
+
+- Un 'Makefile' est foruni pour simplifier la compilation.
+- Un fichier shell 'test' permet de tester quelques commandes natives de manière "semi-automatique".
+- Il y a une séparation forte entre les commandes "natives" (builtins) et les commandes extérieures lancées par le shell: les commandes natives sont enregistrées dans un structure gloable exposée dans le header "comands.h", et pour chaque ligne de commande à exécuter, on compare le premier mot avec chacunes des commandes natives disponibles, et on exécute celle-ci si elle existe, courcicuitant ainsi le comportement normal du shell (faire un fork() puis lancer la commande dans le processus fils).
+    NB: l'utilsation d'un algorithme de Aho-Corasick pourrait probablement améliorer quelque peu les performances lorsque le nombre de commandes natives devient important (comme c'est le cas dans un shell conséquent comme bash ou ZSH).
+- On utilise systèmatiquement waitpid() pour attendre un processus. On utilise l'option WUNTRACED qui permet d'être également notifié si le processus observé est arrêté (par un signal SIGSTOp par exemple).
+
+Difficultés rencontrées
+-----------------------
+
+- Gestion de la mémoire:
+    Il faut s'assurer que quel que soit le chemin suivi, la mémoire associée au processus fils dans le processus principal (qui est une structure process, définie dans 'process.h') soit déallouée.
+    Cela est d'autant plus dur que les commandes type 'fg' effectuent des modifications substantielles dans le flux du programme (la variable globale 'processus' est remplacé au cours de l'exécution du la commande, afin de pouvoir traiter correctement les signaux qui seraient envoyés à la commande en cours, ce qui implique à son tour qu'il faut libérer la mémoire associée à la commande 'fg' elle-même, afin de ne pas perdre toute référence vers cette mémoire).
+    Fort heureusement, valgrind m'a été d'une aide plus que secourable dans cette optique pour diagnostiquer les problèmes présent dans le code.
+
+- Traitement convenable des signaux:
+    Les signaux interrompent l'appel système en cours, ce qui peut être assez problématique avec l'appel waitpid(). Il faut donc rappeler waitpid() lorsque celui-ci est interrompu, SAUF si le traitant de signal appelé a supprimé la variable processus, auquel cas le processus a été mis en tâche de fond et arrêté, et attendre ce processus risquerait de bloquer indéfiniment le minishell.
+    Les signaux doivent s'assurer qu'ils agissent sur des données valides, sous risque de segmentation fault, c'est pourquoi j'ai ajouté un champ is_ok, qui est initalisé à faux par défaut (assuré par le calloc qui initialise la mémoire de la structure process à 0). Ce champ n'est passé à vrai que lorsque toutes les données ont été allouées, la ligne de commande décodée et le champ 'pid' associé au processus fils. Les traitants n'agissent que si 'processus' (la variagle globale qui définit le processus en cours d'exécution) est non nul et que son champ 'is_ok' est évalué à 'true'.
+
+- Création d'une liste chaînée:
+    J'ai perdu une temps non négligeable en implémentant ma liste chaînée puisque j'ai choisi de passer des 'struct list**' en lieu et place de 'struct list*' afin de ne pas avoir à discriminer le cas de la liste vide et de la liste avec plusieurs élements. En l'absence de tests, j'ai été "mordu" par divers problèmes lié à l'arithmétique des pointeurs (et à un un certain manque de logique de ma part !). En conclusion: la prochaîne fois que je me prête à pareil exercice, je ferais des tests...

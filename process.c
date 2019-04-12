@@ -2,11 +2,14 @@
 #include <sys/wait.h>
 #include <errno.h>
 
-void wait_process_blocking(pid_t pid) {
+void wait_process_blocking() {
+    if (processus == NULL)
+        return;
+
     bool stopped = false;
     int wait_status;
     while (!stopped) {
-        if (waitpid(pid, &wait_status, 0) < 0) {
+        if (waitpid(processus->pid, &wait_status, WUNTRACED) < 0) {
             // waitpid() interrompu par un signal
             if (errno == EINTR) {
                 // le processus a été terminé ou mis en tâche de fond par une interaction extérieure
@@ -16,6 +19,13 @@ void wait_process_blocking(pid_t pid) {
             }
             dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant: %s\n", strerror(errno));
             exit(1);
+        }
+        // Le processus a été stoppé par un signal
+        if (WIFSTOPPED(wait_status)) {
+            processus->state = SUSPENDED;
+            add_list(&background_processes, processus);
+            processus = NULL;
+            return;
         }
         if (WIFEXITED(wait_status) || WIFSIGNALED(wait_status)) {
             stopped = true;

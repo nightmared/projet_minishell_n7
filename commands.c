@@ -10,11 +10,16 @@ void print_command_line(struct command_line *cmd) {
 }
 
 struct command_line read_input() {
+    // ligne de commande invalide, retournée si nécessaire
+    struct command_line invalid;
+    invalid.is_valid = false;
+
     char buf[MAX_COMMAND_LENGTH];
     if (fgets(buf, MAX_COMMAND_LENGTH, stdin) == NULL) {
         printf("\nFin de fichier atteinte, au revoir !\n");
-        // On ferme sans attendre les processus orphelins :(
-        exit(0);
+        // on quitte le shell
+        exit_code = 0;
+        return invalid;
     }
 
     int nb_read = strlen(buf);
@@ -25,8 +30,6 @@ struct command_line read_input() {
 
 
     if (nb_read < 2) {
-        struct command_line invalid;
-        invalid.is_valid = false;
         return invalid;
     }
 
