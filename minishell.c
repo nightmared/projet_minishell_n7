@@ -51,7 +51,10 @@ int main(int argc, char *argv[]) {
             exit(1);
         } else if (pid == 0) {
             // On exécute la commande en cherchant dans le path
-            execvp(input.words[0], input.words);
+            if (execvp(input.words[0], input.words) < 0) {
+                dprintf(STDERR_FILENO, "Commande non trouvée dans votre $PATH\n");
+                return EXIT_FAILURE;
+            }
         } else {
             processus->pid = pid;
             processus->state = RUNNING;

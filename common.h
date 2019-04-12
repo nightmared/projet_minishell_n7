@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define MAX_COMMAND_LENGTH 30
+#define MAX_COMMAND_LENGTH 100
 
 extern int exit_code;
 extern struct list *background_processes;

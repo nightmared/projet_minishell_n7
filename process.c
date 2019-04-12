@@ -49,6 +49,14 @@ void free_process(struct process **p) {
     }
     free((*p)->cmd.words);
 
+    // Libération des flux de données s'ils ne sont pas partagés par nous-même
+    if ((*p)->cmd.input_stream && (*p)->cmd.input_stream != stdin)
+        fclose((*p)->cmd.input_stream);
+    if ((*p)->cmd.output_stream && (*p)->cmd.output_stream != stdout)
+        fclose((*p)->cmd.output_stream);
+    if ((*p)->cmd.error_stream && (*p)->cmd.error_stream != stderr)
+        fclose((*p)->cmd.error_stream);
+
     free(*p);
     *p = NULL;
 }

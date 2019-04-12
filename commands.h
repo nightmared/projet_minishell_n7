@@ -19,10 +19,17 @@ struct command_line {
     bool background_task;
     // La commande est-elle valide ?
     bool is_valid;
+    // flux de données
+    FILE *input_stream;
+    FILE *output_stream;
+    FILE *error_stream;
 };
 
 // print the command line
 void print_command_line(struct command_line *cmd);
+
+// Nombre de mots qui constituent la commande principale (n'inclue pas les processus derrière les "tubes")
+int get_nb_words(struct command_line *cmd);
 
 // Lire une commande
 struct command_line read_input();
