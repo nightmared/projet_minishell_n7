@@ -3,23 +3,20 @@
 #include <errno.h>
 
 void wait_process_blocking() {
-    if (processus == NULL)
-        return;
-
     bool stopped = false;
     int wait_status;
     while (!stopped) {
         if (waitpid(processus->pid, &wait_status, WUNTRACED) < 0) {
             // waitpid() interrompu par un signal
-            if (errno == EINTR) {
-                // le processus a été terminé ou mis en tâche de fond par une interaction extérieure
-                if (processus == NULL)
-                    return;
+            if (errno == EINTR && processus != NULL) {
                 continue;
             }
             dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant: %s\n", strerror(errno));
             exit(1);
         }
+        // le processus a été terminé ou mis en tâche de fond par une interaction extérieure
+        if (processus == NULL)
+            return;
         // Le processus a été stoppé par un signal
         if (WIFSTOPPED(wait_status)) {
             processus->state = SUSPENDED;
@@ -62,12 +59,16 @@ void scan_background_processes(struct list **bkg_proc) {
         struct process *p = (struct process*)(*l)->data;
 
         int status;
-        pid_t state = waitpid(p->pid, &status, WNOHANG);
+        pid_t state = waitpid(p->pid, &status, WCONTINUED | WUNTRACED | WNOHANG);
         if (state < 0) {
             dprintf(STDERR_FILENO, "waitpid() failed, let's ignore that...\n");
         } else if (state > 0) {
             if (WIFEXITED(status) || WIFSIGNALED(status)) {
                 delete_list_with_fun(l, p, (void (*)(void**))&free_process);
+            } else if (WIFSTOPPED(status)) {
+                p->state = SUSPENDED;
+            } else if (WIFCONTINUED(status)) {
+                p->state = RUNNING;
             }
         }
 

@@ -92,7 +92,7 @@ void command_fg(char** argv) {
             processus = p;
             delete_list(cur, p);
             kill(p->pid, SIGCONT);
-            wait_process_blocking(p->pid);
+            wait_process_blocking();
             return;
         }
         counter--;

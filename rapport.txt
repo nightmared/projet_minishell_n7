@@ -9,7 +9,7 @@ Choix de conception
 - Un fichier shell 'test' permet de tester quelques commandes natives de manière "semi-automatique".
 - Il y a une séparation forte entre les commandes "natives" (builtins) et les commandes extérieures lancées par le shell: les commandes natives sont enregistrées dans un structure gloable exposée dans le header "comands.h", et pour chaque ligne de commande à exécuter, on compare le premier mot avec chacunes des commandes natives disponibles, et on exécute celle-ci si elle existe, courcicuitant ainsi le comportement normal du shell (faire un fork() puis lancer la commande dans le processus fils).
     NB: l'utilsation d'un algorithme de Aho-Corasick pourrait probablement améliorer quelque peu les performances lorsque le nombre de commandes natives devient important (comme c'est le cas dans un shell conséquent comme bash ou ZSH).
-- On utilise systèmatiquement waitpid() pour attendre un processus. On utilise l'option WUNTRACED qui permet d'être également notifié si le processus observé est arrêté (par un signal SIGSTOp par exemple).
+- On utilise systèmatiquement waitpid() pour attendre un processus. On utilise l'option WUNTRACED qui permet d'être également notifié si le processus observé est arrêté (par un signal SIGSTOP par exemple) et WCONTINUED pour être notifié en cas de signal SIGCONT.
 
 Difficultés rencontrées
 -----------------------

@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
                 add_list(&background_processes, processus);
             } else {
                 // on attend que le processus se termine
-                wait_process_blocking(pid);
+                wait_process_blocking();
 
                 // on libère la mémoire allouée
                 free_process(&processus);
