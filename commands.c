@@ -71,29 +71,44 @@ struct command_line read_input() {
         buf_pos++;
     }
     // délimiteur pour indiquer la fin des données
-    words[word_number--] = NULL;
+    words[word_number] = NULL;
 
     // tâche de fond
-    res.background_task = (words[word_number][0] == '&');
+    res.background_task = (words[word_number-1][0] == '&');
     if(res.background_task) {
-        free(words[word_number]);
+        free(words[word_number--]);
         words[word_number] = NULL;
     }
 
     res.words = words;
-    res.is_valid = true;
-    res.input_stream = stdin;
-    res.output_stream = stdout;
-    res.error_stream = stderr;
+    res.input_stream = NULL;
+    res.output_stream = NULL;
+    res.error_stream = NULL;
 
     // vérification des flux de donnée
-    for (int i = 0; i < word_number-1; i++) {
-        //if (words[i] == '>')
-
+    int i = 0;
+    while (i <= word_number-1) {
+        // si on a une redirection, on ouvre le fichier concerné
+        if (words[i][0] == '>') {
+            res.output_stream = words[i+1];
+        } else if (strlen(words[i]) == 2 && words[i][0] == '2' && words[i][1] == '>') {
+            res.error_stream = words[i+1];
+        } else if (words[i][0] == '<') {
+            res.input_stream = words[i+1];
+        } else {
+            i++;
+            continue;
+        }
+        free(words[i]);
+        // on décale les arguments sur la ligne de commande
+        for (int j = i; j <= word_number-2; j++) {
+            words[j] = words[j+2];
+        }
+        word_number -= 2;
+        words[word_number] = NULL;
     }
-    print_command_line(&res);
 
-
+    res.is_valid = true;
     return res;
 }
 

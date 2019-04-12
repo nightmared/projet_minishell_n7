@@ -20,9 +20,9 @@ struct command_line {
     // La commande est-elle valide ?
     bool is_valid;
     // flux de données
-    FILE *input_stream;
-    FILE *output_stream;
-    FILE *error_stream;
+    char *input_stream;
+    char *output_stream;
+    char *error_stream;
 };
 
 // print the command line

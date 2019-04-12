@@ -50,6 +50,26 @@ int main(int argc, char *argv[]) {
             dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");
             exit(1);
         } else if (pid == 0) {
+            // On mets à jour les directions des flux de données
+            if (processus->cmd.output_stream) {
+                if (freopen(processus->cmd.output_stream, "w", stdout) == NULL) {
+                    dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", processus->cmd.output_stream);
+                    return EXIT_FAILURE;
+                }
+            }
+            if (processus->cmd.error_stream) {
+                if (freopen(processus->cmd.error_stream, "w", stderr) == NULL) {
+                    dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", processus->cmd.error_stream);
+                    return EXIT_FAILURE;
+                }
+            }
+            if (processus->cmd.input_stream) {
+                if (freopen(processus->cmd.input_stream, "r", stdin) == NULL) {
+                    dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", processus->cmd.input_stream);
+                    return EXIT_FAILURE;
+                }
+            }
+
             // On exécute la commande en cherchant dans le path
             if (execvp(input.words[0], input.words) < 0) {
                 dprintf(STDERR_FILENO, "Commande non trouvée dans votre $PATH\n");

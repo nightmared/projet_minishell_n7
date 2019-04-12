@@ -25,3 +25,6 @@ Difficultés rencontrées
 
 - Création d'une liste chaînée:
     J'ai perdu une temps non négligeable en implémentant ma liste chaînée puisque j'ai choisi de passer des 'struct list**' en lieu et place de 'struct list*' afin de ne pas avoir à discriminer le cas de la liste vide et de la liste avec plusieurs élements. En l'absence de tests, j'ai été "mordu" par divers problèmes lié à l'arithmétique des pointeurs (et à un un certain manque de logique de ma part !). En conclusion: la prochaîne fois que je me prête à pareil exercice, je ferais des tests...
+
+- Modification des descripteurs de fichiers liés aux entrées/sorties standard (stdin, stdout et stderr)
+    J'ai naïvement tenté d'assigner directement à stdin, stdout et stderr la valeur de "streams" ouverts avec fopen(), avant de lire plus attentivement la page de man et de voir que «Since the symbols stdin, stdout, and stderr are specified to be macros, assigning to them is nonportable.». J'ai donc ensuite opté pour l'utilisation de freopen().
