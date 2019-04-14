@@ -23,13 +23,12 @@ struct command_line {
     char *input_stream;
     char *output_stream;
     char *error_stream;
+    // liste des processus qui composent le pipe, excepté le premier
+    struct command_line *next_pipe;
 };
 
 // print the command line
 void print_command_line(struct command_line *cmd);
-
-// Nombre de mots qui constituent la commande principale (n'inclue pas les processus derrière les "tubes")
-int get_nb_words(struct command_line *cmd);
 
 // Lire une commande
 struct command_line read_input();

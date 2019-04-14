@@ -57,6 +57,9 @@ void free_list(struct list **l) {
 }
 
 void free_list_with_fun(struct list **l, void (*fun)(void**)) {
+    if (l == NULL)
+        return;
+
     struct list **cur = l;
 
     while (*cur != NULL) {
