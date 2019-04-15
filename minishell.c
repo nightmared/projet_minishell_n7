@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
             dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");
             exit(1);
         } else if (pid == 0) {
-           run_command();
+           return run_command(&processus->cmd);
         } else {
             processus->pid = pid;
             processus->state = RUNNING;

@@ -6,7 +6,8 @@
 void sig_handler_sigint(int signum) {
     // propagation du signal
     if (processus != NULL && processus->is_ok)
-        kill(processus->pid, SIGINT);
+        // on évite SIGKILL, qui reste généralement une mauvaise idée
+        kill(processus->pid, SIGTERM);
 }
 
 void sig_handler_sigtstp(int signum) {

@@ -1,4 +1,5 @@
 #include "process.h"
+#include "signals.h"
 #include <sys/wait.h>
 #include <errno.h>
 
@@ -8,7 +9,10 @@ void wait_process_blocking() {
     while (!stopped) {
         if (waitpid(processus->pid, &wait_status, WUNTRACED) < 0) {
             // waitpid() interrompu par un signal
-            if (errno == EINTR && processus != NULL) {
+            if (errno == EINTR) {
+                if (processus == NULL) {
+                    return;
+                }
                 continue;
             }
             dprintf(STDERR_FILENO, "Impossible d'attendre le processus enfant: %s\n", strerror(errno));
@@ -98,33 +102,59 @@ void scan_background_processes(struct list **bkg_proc) {
     }
 }
 
-int run_command() {
+int run_command(struct command_line *cmd) {
+    // on masque les signaux sigtstp et sigint, malheureusement
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGTSTP);
+    sigaddset(&set, SIGINT);
+    sigprocmask(SIG_SETMASK, &set, NULL);
+
     // On mets à jour les directions des flux de données
-    if (processus->cmd.output_stream) {
-        if (freopen(processus->cmd.output_stream, "w", stdout) == NULL) {
-            dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", processus->cmd.output_stream);
+    if (cmd->output_stream) {
+        if (freopen(cmd->output_stream, "w", stdout) == NULL) {
+            dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", cmd->output_stream);
             return EXIT_FAILURE;
         }
     }
-    if (processus->cmd.error_stream) {
-        if (freopen(processus->cmd.error_stream, "w", stderr) == NULL) {
-            dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", processus->cmd.error_stream);
+    if (cmd->error_stream) {
+        if (freopen(cmd->error_stream, "w", stderr) == NULL) {
+            dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", cmd->error_stream);
             return EXIT_FAILURE;
         }
     }
-    if (processus->cmd.input_stream) {
-        if (freopen(processus->cmd.input_stream, "r", stdin) == NULL) {
-            dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", processus->cmd.input_stream);
+    if (cmd->input_stream) {
+        if (freopen(cmd->input_stream, "r", stdin) == NULL) {
+            dprintf(STDERR_FILENO, "Échec de l'ouverture du fichier %s\n", cmd->input_stream);
             return EXIT_FAILURE;
         }
+    }
+
+    // traitement du pipeline
+    struct command_line *pipe = cmd->next_pipe;
+    while (pipe != NULL) {
+        pid_t pid = fork();
+        if (pid < -1) {
+            dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");
+            exit(1);
+        } else if (pid == 0) {
+            // on connecte la sortie du processus précédent avec l'entrée du nouveau processus
+
+            // on exécute le processus fils
+            if (execvp(pipe->words[0], pipe->words) < 0) {
+                dprintf(STDERR_FILENO, "Commande '%s' non trouvée dans votre $PATH\n", pipe->words[0]);
+                return EXIT_FAILURE;
+            }
+        }
+        pipe = pipe->next_pipe;
     }
 
     // On exécute la commande en cherchant dans le path
-    if (execvp(processus->cmd.words[0], processus->cmd.words) < 0) {
-        dprintf(STDERR_FILENO, "Commande non trouvée dans votre $PATH\n");
+    if (execvp(cmd->words[0], cmd->words) < 0) {
+        dprintf(STDERR_FILENO, "Commande '%s' non trouvée dans votre $PATH\n", cmd->words[0]);
         return EXIT_FAILURE;
     }
 
-    // pour faire plaisi au compilateur, puisqu'on n'arrivera jamais jusque ici
+    // présent uniquement pour faire plaisir au compilateur, puisqu'on n'arrivera jamais jusque ici
     return EXIT_SUCCESS;
 }

@@ -22,6 +22,6 @@ void wait_process_blocking();
 char *get_process_state(struct process *p);
 void free_process(struct process **p);
 void scan_background_processes(struct list **bkg_proc);
-int run_command(void);
+int run_command(struct command_line *cmd);
 
 #endif // PROCESS_H_HEADER
