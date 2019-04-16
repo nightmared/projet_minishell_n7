@@ -159,12 +159,12 @@ int run_with_pipe(struct command_line *current) {
 }
 
 int run_command(struct command_line *cmd) {
-    // on masque les signaux sigtstp et sigint, malheureusement (cf. moodle)
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, SIGTSTP);
-    sigaddset(&set, SIGINT);
-    sigprocmask(SIG_SETMASK, &set, NULL);
+    //// on masque les signaux sigtstp et sigint, malheureusement (cf. moodle)
+    //sigset_t set;
+    //sigemptyset(&set);
+    //sigaddset(&set, SIGTSTP);
+    //sigaddset(&set, SIGINT);
+    //sigprocmask(SIG_SETMASK, &set, NULL);
 
     run_with_pipe(cmd);
 }

@@ -50,8 +50,12 @@ int main(int argc, char *argv[]) {
             dprintf(STDERR_FILENO, "Impossible de forker, problème de mémoire ?\n");
             exit(1);
         } else if (pid == 0) {
-           return run_command(&processus->cmd);
+            // exécution dans un nouveau groupe de processus pour s'isoler des signaux envoyés par le shell externe (probablement bash)
+            setpgid(getpid(), getpid());
+           return run_with_pipe(&processus->cmd);
         } else {
+            // cf. le code de l'enfant
+            setpgid(pid, pid);
             processus->pid = pid;
             processus->state = RUNNING;
             processus->is_ok = true;

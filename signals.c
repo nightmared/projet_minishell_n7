@@ -7,13 +7,13 @@ void sig_handler_sigint(int signum) {
     // propagation du signal
     if (processus != NULL && processus->is_ok)
         // on évite SIGKILL, qui reste généralement une mauvaise idée
-        kill(processus->pid, SIGTERM);
+        kill(-processus->pid, SIGINT);
 }
 
 void sig_handler_sigtstp(int signum) {
     // propagation du signal
     if (processus != NULL && processus->is_ok) {
-        kill(processus->pid, SIGSTOP);
+        kill(-processus->pid, SIGSTOP);
         processus->state = SUSPENDED;
         add_list(&background_processes, processus);
         processus = NULL;
@@ -35,4 +35,12 @@ void register_signals(void) {
     // idem pour les SIGTSTP (^Z)
     signal_catcher.sa_handler = &sig_handler_sigtstp;
     sigaction(SIGTSTP, &signal_catcher, NULL);
+
+    // on bloque les SIGTTOU et SGTTIN
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGTTOU);
+    sigaddset(&set, SIGTTIN);
+    sigprocmask(SIG_SETMASK, &set, NULL);
+
 }

@@ -13,11 +13,6 @@ void command_exit_shell(char** argv) {
     }    
 }
 
-void command_echo(char** argv) {
-    //TODO
-    //dprintf(STDERR_FILENO, "Commande invalide.\n");
-}
-
 void command_cd(char** argv) {
     if (argv[0] != NULL) {
         char *dir = argv[0];
@@ -69,7 +64,7 @@ void command_stop(char** argv) {
     while (*cur != NULL) {
         if (counter == 0) {
             struct process *p = (*cur)->data;
-            kill(p->pid, SIGSTOP);
+            kill(-p->pid, SIGSTOP);
             p->state = SUSPENDED;
             return;
         }
@@ -91,7 +86,7 @@ void command_fg(char** argv) {
             // on recommence l'exécution du programme
             processus = p;
             delete_list(cur, p);
-            kill(p->pid, SIGCONT);
+            kill(-p->pid, SIGCONT);
             wait_process_blocking();
             return;
         }
@@ -111,7 +106,7 @@ void command_bg(char** argv) {
             struct process *p = (*cur)->data;
             p->state = RUNNING;
             // on recommence l'exécution du programme
-            kill(p->pid, SIGCONT);
+            kill(-p->pid, SIGCONT);
             return;
         }
         counter--;
