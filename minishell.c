@@ -1,3 +1,4 @@
+#include "common.h"
 #include "commands.h"
 #include "process.h"
 #include "list.h"
@@ -52,9 +53,10 @@ int main(int argc, char *argv[]) {
         } else if (pid == 0) {
             // exécution dans un nouveau groupe de processus pour s'isoler des signaux envoyés par le shell externe (probablement bash)
             setpgid(getpid(), getpid());
-           return run_with_pipe(&processus->cmd);
+            return run_with_pipe(&processus->cmd);
         } else {
             // cf. le code de l'enfant
+            // ce second appel est conçu pour diminuer les 'race conditions' entre le début de l'exécution du programme et son appel à setpgid()
             setpgid(pid, pid);
             processus->pid = pid;
             processus->state = RUNNING;

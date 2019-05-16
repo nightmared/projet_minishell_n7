@@ -1,7 +1,7 @@
 EXEC = minishell
 FILES = minishell.c commands.c list.c process.c builtins.c signals.c
 OBJECTS = $(FILES:.c=.o)
-CFLAGS = -g -Wall -pedantic
+CFLAGS = -std=c11 -g -Wall -pedantic
 
 all: $(EXEC)
 

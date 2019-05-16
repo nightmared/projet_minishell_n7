@@ -123,7 +123,7 @@ int run_with_pipe(struct command_line *current) {
         } else {
             close(pipefd[0]);
             // on redirige notre sortie standard vers le nouveau processus
-            int new_output = dup2(pipefd[1], STDOUT_FILENO);
+            dup2(pipefd[1], STDOUT_FILENO);
         }
     }
 
@@ -167,4 +167,5 @@ int run_command(struct command_line *cmd) {
     //sigprocmask(SIG_SETMASK, &set, NULL);
 
     run_with_pipe(cmd);
+    return EXIT_SUCCESS;
 }
